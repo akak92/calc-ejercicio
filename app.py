@@ -1,4 +1,7 @@
+
+
 from fastapi import FastAPI, HTTPException
+from src.routes.calculator import router as calculator_router
 from typing import Dict
 import logging
 import os
@@ -10,6 +13,9 @@ load_dotenv()
 logger = logging.getLogger("uvicorn")
 
 app: FastAPI = FastAPI()
+
+# Registrar rutas de calculadora
+app.include_router(calculator_router, prefix="/calc", tags=["Calculadora"])
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB = os.getenv("MONGO_DB", "db_ejercicio")
@@ -66,3 +72,17 @@ def db_health() -> Dict[str, str]:
             status_code=503,
             detail=f"Database connection failed: {str(e)}"
         )
+    
+# Endpoint raíz que da la bienvenida al usuario
+@app.get("/", tags=["Root"])
+def root() -> dict:
+    """
+    Endpoint raíz que da la bienvenida al usuario.
+
+    Returns
+    -------
+    dict
+        Mensaje de bienvenida.
+    """
+    logger.info("Bienvenida solicitada en el endpoint raíz.")
+    return {"mensaje": "¡Bienvenido a la API de la Calculadora!"}
