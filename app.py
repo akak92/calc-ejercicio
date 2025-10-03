@@ -1,10 +1,21 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from typing import Dict
 import logging
+import os
+from pymongo import MongoClient
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 logger = logging.getLogger("uvicorn")
 
 app: FastAPI = FastAPI()
+
+# MongoDB configuration
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_DB = os.getenv("MONGO_DB", "db_ejercicio")
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION", "calculator")
 
 
 @app.get("/health", response_model=Dict[str, str])
@@ -19,3 +30,45 @@ def health() -> Dict[str, str]:
     """
     logger.info("Health check requested.")
     return {"status": "ok"}
+
+
+@app.get("/db_health", response_model=Dict[str, str])
+def db_health() -> Dict[str, str]:
+    """
+    Database health check endpoint.
+
+    Returns
+    -------
+    dict
+        Dictionary with database connection status.
+    """
+    logger.info("Database health check requested.")
+    
+    try:
+        # Create MongoDB client
+        client = MongoClient(MONGO_URI)
+        
+        # Test the connection by pinging the database
+        client.admin.command('ping')
+        
+        # Test if the specific database exists
+        db = client[MONGO_DB]
+        collections = db.list_collection_names()
+        
+        # Close the connection
+        client.close()
+        
+        logger.info("Database connection successful.")
+        return {
+            "status": "ok",
+            "database": MONGO_DB,
+            "uri": MONGO_URI,
+            "collections_count": str(len(collections))
+        }
+        
+    except Exception as e:
+        logger.error(f"Database connection failed: {str(e)}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Database connection failed: {str(e)}"
+        )
