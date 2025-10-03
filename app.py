@@ -18,7 +18,7 @@ MONGO_DB = os.getenv("MONGO_DB", "db_ejercicio")
 MONGO_COLLECTION = os.getenv("MONGO_COLLECTION", "calculator")
 
 
-@app.get("/health", response_model=Dict[str, str])
+@app.get("/health", response_model=Dict[str, str], tags=["Health"])
 def health() -> Dict[str, str]:
     """
     Health check endpoint.
@@ -32,7 +32,7 @@ def health() -> Dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/db_health", response_model=Dict[str, str])
+@app.get("/db_health", response_model=Dict[str, str], tags=["Database"])
 def db_health() -> Dict[str, str]:
     """
     Database health check endpoint.
